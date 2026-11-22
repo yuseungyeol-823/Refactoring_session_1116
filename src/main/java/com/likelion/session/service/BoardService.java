@@ -44,14 +44,7 @@ public class BoardService {
 
         Board savedBoard = boardRepository.save(board);
 
-        return BoardResponse.builder()
-                .id(savedBoard.getId())
-                .title(savedBoard.getTitle())
-                .content(savedBoard.getContent())
-                .writer(savedBoard.getWriter())
-                .createdAt(savedBoard.getCreatedAt())
-                .updatedAt(savedBoard.getUpdatedAt())
-                .build();
+        return BoardResponse.from(savedBoard);
     }
 
     /*
@@ -63,14 +56,7 @@ public class BoardService {
     public List<BoardResponse> findAll() {
         return boardRepository.findAll()
                 .stream()
-                .map(board -> BoardResponse.builder()
-                        .id(board.getId())
-                        .title(board.getTitle())
-                        .content(board.getContent())
-                        .writer(board.getWriter())
-                        .createdAt(board.getCreatedAt())
-                        .updatedAt(board.getUpdatedAt())
-                        .build())
+                .map(BoardResponse::from)
                 .toList();
     }
 
@@ -81,17 +67,9 @@ public class BoardService {
      */
     @Transactional(readOnly = true)
     public BoardResponse findById(Long id) {
-        Board board = boardRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("해당 게시글이 없습니다. id=" + id));
+        Board board = findBoardById(id);
 
-        return BoardResponse.builder()
-                .id(board.getId())
-                .title(board.getTitle())
-                .content(board.getContent())
-                .writer(board.getWriter())
-                .createdAt(board.getCreatedAt())
-                .updatedAt(board.getUpdatedAt())
-                .build();
+        return BoardResponse.from(board);
     }
 
     /*
@@ -101,19 +79,11 @@ public class BoardService {
         - JPA 변경 감지로 update 반영
      */
     public BoardResponse update(Long id, BoardUpdateRequest request) {
-        Board board = boardRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("해당 게시글이 없습니다. id=" + id));
+        Board board = findBoardById(id);
 
         board.update(request.getTitle(), request.getContent());
 
-        return BoardResponse.builder()
-                .id(board.getId())
-                .title(board.getTitle())
-                .content(board.getContent())
-                .writer(board.getWriter())
-                .createdAt(board.getCreatedAt())
-                .updatedAt(board.getUpdatedAt())
-                .build();
+        return BoardResponse.from(board);
     }
 
     /*
@@ -126,8 +96,7 @@ public class BoardService {
 
     // 기존 delete() 메서드 수정
     public void delete(Long id) {
-        Board board = boardRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("해당 게시글이 없습니다. id=" + id));
+        Board board = findBoardById(id);
 
         // 삭제 이력 저장 (Service에서 두 Repository를 조합!)
         DeleteLog log = new DeleteLog(board.getId(), board.getTitle(), board.getWriter());
@@ -147,14 +116,7 @@ public class BoardService {
     public List<BoardResponse> searchByTitle(String keyword) {
         return boardRepository.findByTitleContaining(keyword)
                 .stream()
-                .map(board -> BoardResponse.builder()
-                        .id(board.getId())
-                        .title(board.getTitle())
-                        .content(board.getContent())
-                        .writer(board.getWriter())
-                        .createdAt(board.getCreatedAt())
-                        .updatedAt(board.getUpdatedAt())
-                        .build())
+                .map(BoardResponse::from)
                 .toList();
     }
 
@@ -165,14 +127,7 @@ public class BoardService {
     public List<BoardResponse> searchByWriter(String writer) {
         return boardRepository.findByWriter(writer)
                 .stream()
-                .map(board -> BoardResponse.builder()
-                        .id(board.getId())
-                        .title(board.getTitle())
-                        .content(board.getContent())
-                        .writer(board.getWriter())
-                        .createdAt(board.getCreatedAt())
-                        .updatedAt(board.getUpdatedAt())
-                        .build())
+                .map(BoardResponse::from)
                 .toList();
     }
 
@@ -183,14 +138,7 @@ public class BoardService {
     public List<BoardResponse> search(String keyword) {
         return boardRepository.searchByKeyword(keyword)
                 .stream()
-                .map(board -> BoardResponse.builder()
-                        .id(board.getId())
-                        .title(board.getTitle())
-                        .content(board.getContent())
-                        .writer(board.getWriter())
-                        .createdAt(board.getCreatedAt())
-                        .updatedAt(board.getUpdatedAt())
-                        .build())
+                .map(BoardResponse::from)
                 .toList();
     }
 
@@ -206,14 +154,7 @@ public class BoardService {
 
         List<BoardResponse> content = boardPage.getContent()
                 .stream()
-                .map(board -> BoardResponse.builder()
-                        .id(board.getId())
-                        .title(board.getTitle())
-                        .content(board.getContent())
-                        .writer(board.getWriter())
-                        .createdAt(board.getCreatedAt())
-                        .updatedAt(board.getUpdatedAt())
-                        .build())
+                .map(BoardResponse::from)
                 .toList();
 
         return BoardPageResponse.builder()
@@ -237,5 +178,10 @@ public class BoardService {
                         .deletedAt(log.getDeletedAt())
                         .build())
                 .toList();
+    }
+
+    private Board findBoardById(Long boardId) {
+        return boardRepository.findById(boardId)
+                .orElseThrow(() -> new IllegalArgumentException("해당 게시글이 없습니다. id=" + boardId));
     }
 }
